@@ -1,0 +1,7 @@
+livekit
+livekit-agents[openai,silero]>=1.2.0
+livekit-plugins-bithuman
+python-dotenv
+opencv-python
+loguru
+bithuman  # Note: Only available on Linux/macOS, use WSL2 on Windows

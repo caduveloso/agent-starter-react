@@ -1,0 +1,11 @@
+services:
+  bithuman-agent:
+    build:
+      context: ..
+      dockerfile: agent/Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - ./agent.py:/app/agent.py
+    network_mode: "host"
+    restart: unless-stopped

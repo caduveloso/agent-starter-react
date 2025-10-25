@@ -2,6 +2,12 @@
 
 This is a starter template for [LiveKit Agents](https://docs.livekit.io/agents) that provides a simple voice interface using the [LiveKit JavaScript SDK](https://github.com/livekit/client-sdk-js). It supports [voice](https://docs.livekit.io/agents/start/voice-ai), [transcriptions](https://docs.livekit.io/agents/build/text/), and [virtual avatars](https://docs.livekit.io/agents/integrations/avatar).
 
+> **🎭 bitHuman Avatar Integration**: This repository includes a complete Python backend agent with [bitHuman avatar support](https://docs.livekit.io/agents/integrations/avatar/bithuman/).
+>
+> **🚀 [READ START_HERE.md](START_HERE.md) to run with Docker Desktop (easiest for Windows)!**
+>
+> **⚠️ Note**: bitHuman SDK requires Linux (Windows users: use Docker Desktop or WSL2).
+
 Also available for:
 [Android](https://github.com/livekit-examples/agent-starter-android) • [Flutter](https://github.com/livekit-examples/agent-starter-flutter) • [Swift](https://github.com/livekit-examples/agent-starter-swift) • [React Native](https://github.com/livekit-examples/agent-starter-react-native)
 
