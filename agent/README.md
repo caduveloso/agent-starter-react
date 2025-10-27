@@ -4,35 +4,15 @@ This directory contains the Python backend agent that powers the bitHuman avatar
 
 ## Prerequisites
 
-1. Python 3.9 or higher
-2. bitHuman API Secret (already configured in `.env`)
-3. bitHuman Avatar ID (already configured in `.env` as `A48QHJ6779`)
+1. **Docker Desktop** (required)
+2. bitHuman API Secret (configured in `.env`)
+3. bitHuman Avatar ID (configured in `.env` as `A48QHJ6779`)
 4. OpenAI API Key (for LLM, STT, and TTS)
-5. LiveKit credentials (already configured in `.env`)
+5. LiveKit credentials (configured in `.env`)
 
-## Setup
+## Quick Start
 
-### 1. Install Dependencies
-
-```bash
-cd agent
-pip install -r requirements.txt
-```
-
-Or using a virtual environment (recommended):
-
-```bash
-cd agent
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment Variables
+### 1. Configure Environment Variables
 
 Make sure you have the following in your `.env` file (in the project root):
 
@@ -50,19 +30,17 @@ BITHUMAN_AVATAR_ID=A48QHJ6779
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-### 3. Run the Agent
+### 2. Run the Agent with Docker
 
 From the `agent` directory:
 
 ```bash
-python agent.py dev
+docker compose up --build
 ```
 
-Or with logging:
+That's it! The agent will start and connect to your LiveKit room.
 
-```bash
-python agent.py dev --log-level info
-```
+To stop the agent, press `Ctrl+C`
 
 ## How It Works
 
