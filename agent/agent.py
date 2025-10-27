@@ -12,6 +12,7 @@ from livekit.agents import (
     cli,
     llm,
     AgentSession,
+    Agent,
 )
 from livekit.plugins import openai, silero, bithuman
 
@@ -38,6 +39,12 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"Connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
+    # Create the agent with instructions
+    logger.info("Creating agent...")
+    agent = Agent(
+        instructions="You are a friendly voice assistant built by LiveKit.",
+    )
+
     # Create the agent session with STT, LLM, and TTS
     logger.info("Creating agent session...")
     session = AgentSession(
@@ -58,9 +65,9 @@ async def entrypoint(ctx: JobContext):
     logger.info("Starting bitHuman avatar with agent session...")
     await avatar.start(session, room=ctx.room)
 
-    # Start the agent session
+    # Start the agent session with the agent
     logger.info("Starting agent session...")
-    await session.start(room=ctx.room)
+    await session.start(agent=agent, room=ctx.room)
 
     logger.info("Agent is ready - avatar and session started")
 

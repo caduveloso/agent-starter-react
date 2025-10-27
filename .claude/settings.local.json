@@ -3,7 +3,8 @@
     "allow": [
       "Bash(powershell:*)",
       "Bash(docker logs:*)",
-      "Bash(pnpm dev:*)"
+      "Bash(pnpm dev:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
