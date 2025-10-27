@@ -47,11 +47,25 @@ async def entrypoint(ctx: JobContext):
 
     # Create the agent session with STT, LLM, and TTS
     logger.info("Creating agent session...")
+
+    # OPTION 1: Pipeline Mode (separate STT → LLM → TTS)
+    # Pros: More control, cheaper, can use different providers
+    # Cons: Higher latency, 3 separate API calls
+    # session = AgentSession(
+    #     vad=silero.VAD.load(),
+    #     stt=openai.STT(model=STT_MODEL),
+    #     llm=openai.LLM(model=LLM_MODEL),
+    #     tts=openai.TTS(model=TTS_MODEL, voice=TTS_VOICE),
+    # )
+
+    # OPTION 2: Realtime Mode (unified speech-to-speech)
+    # Pros: Lower latency (~320ms), more natural conversations, can interrupt
+    # Cons: More expensive, less control over individual steps
     session = AgentSession(
-        vad=silero.VAD.load(),
-        stt=openai.STT(model=STT_MODEL),
-        llm=openai.LLM(model=LLM_MODEL),
-        tts=openai.TTS(model=TTS_MODEL, voice=TTS_VOICE),
+        llm=openai.realtime.RealtimeModel(
+            voice="alloy",  # Options: alloy, echo, shimmer
+            model="gpt-4o-mini-realtime-preview",
+        )
     )
 
     # Create bitHuman avatar session using the avatar ID
