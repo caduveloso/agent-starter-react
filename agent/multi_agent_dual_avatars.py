@@ -42,19 +42,24 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"Connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # Create Agent 1 - The Analyst (responds on odd turns)
+    # Create Agent 1 - The Analyst (speaks first, then pauses)
     logger.info("Creating Agent 1 (The Analyst)...")
     agent1 = Agent(
         instructions=f"""You are Agent 1 - The Analyst in a two-agent discussion about: {DISCUSSION_TOPIC}
 
+CRITICAL INSTRUCTIONS:
+- YOU ALWAYS SPEAK FIRST after the user asks a question
+- Wait 2-3 seconds after you hear the user finish speaking before you respond
+- Keep your response VERY brief (1 sentence only)
+- After you finish speaking, STAY SILENT to let Agent 2 respond
+- DO NOT respond to Agent 2's voice - only respond to the USER
+
 Your role:
 - Provide analytical, data-driven, evidence-based perspectives
 - Question assumptions and look for facts
-- Respond with 1-2 sentences maximum
-- YOU SPEAK FIRST after each user question
-- Keep responses brief and analytical
+- Keep responses to ONE sentence maximum
 
-Start your responses with "Agent 1 here." so the user knows who's speaking."""
+Always start with "Agent 1 here." then give your brief analytical response."""
     )
 
     session1 = AgentSession(
@@ -62,21 +67,28 @@ Start your responses with "Agent 1 here." so the user knows who's speaking."""
         stt=openai.STT(model=STT_MODEL),
         llm=openai.LLM(model=LLM_MODEL),
         tts=openai.TTS(model=TTS_MODEL, voice="alloy"),
+        min_endpointing_delay=2.0,  # Wait 2 seconds before responding
     )
 
-    # Create Agent 2 - The Creative (responds on even turns)
+    # Create Agent 2 - The Creative (speaks second, after Agent 1)
     logger.info("Creating Agent 2 (The Creative)...")
     agent2 = Agent(
         instructions=f"""You are Agent 2 - The Creative in a two-agent discussion about: {DISCUSSION_TOPIC}
 
+CRITICAL INSTRUCTIONS:
+- WAIT for Agent 1 to finish speaking first
+- Count to 5 after Agent 1 stops before you respond
+- Keep your response VERY brief (1 sentence only)
+- After you finish speaking, STAY SILENT and wait for the next user question
+- DO NOT respond to Agent 1's voice - only respond to the USER
+
 Your role:
 - Provide creative, imaginative, alternative perspectives
 - Think outside the box and explore possibilities
-- Respond with 1-2 sentences maximum
-- YOU SPEAK SECOND, after Agent 1 finishes
-- Build on or challenge Agent 1's analytical points
+- Keep responses to ONE sentence maximum
+- Build on or offer alternative to Agent 1's analytical view
 
-Start your responses with "Agent 2 here." so the user knows who's speaking."""
+Always start with "Agent 2 here." then give your brief creative response."""
     )
 
     session2 = AgentSession(
@@ -84,6 +96,7 @@ Start your responses with "Agent 2 here." so the user knows who's speaking."""
         stt=openai.STT(model=STT_MODEL),
         llm=openai.LLM(model=LLM_MODEL),
         tts=openai.TTS(model=TTS_MODEL, voice="echo"),
+        min_endpointing_delay=5.0,  # Wait 5 seconds before responding (after Agent 1)
     )
 
     # Create FIRST BitHuman avatar for Agent 1 with CUSTOM IDENTITY
