@@ -22,7 +22,7 @@ load_dotenv(dotenv_path=env_path)
 logger = logging.getLogger("voice-agent")
 
 # Model configuration
-STT_MODEL = os.getenv("OPENAI_STT_MODEL", "whisper-1")
+STT_MODEL = os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe")
 LLM_MODEL = os.getenv("OPENAI_LLM_MODEL", "gpt-4o-mini")
 TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "tts-1")
 TTS_VOICE = os.getenv("OPENAI_TTS_VOICE", "alloy")
@@ -51,22 +51,22 @@ async def entrypoint(ctx: JobContext):
     # OPTION 1: Pipeline Mode (separate STT → LLM → TTS)
     # Pros: More control, cheaper, can use different providers
     # Cons: Higher latency, 3 separate API calls
-    # session = AgentSession(
-    #     vad=silero.VAD.load(),
-    #     stt=openai.STT(model=STT_MODEL),
-    #     llm=openai.LLM(model=LLM_MODEL),
-    #     tts=openai.TTS(model=TTS_MODEL, voice=TTS_VOICE),
-    # )
+    session = AgentSession(
+        vad=silero.VAD.load(),
+        stt=openai.STT(model=STT_MODEL),
+        llm=openai.LLM(model=LLM_MODEL),
+        tts=openai.TTS(model=TTS_MODEL, voice=TTS_VOICE),
+    )
 
     # OPTION 2: Realtime Mode (unified speech-to-speech)
     # Pros: Lower latency (~320ms), more natural conversations, can interrupt
     # Cons: More expensive, less control over individual steps
-    session = AgentSession(
-        llm=openai.realtime.RealtimeModel(
-            voice="alloy",  # Options: alloy, echo, shimmer
-            model="gpt-4o-mini-realtime-preview",
-        )
-    )
+    #session = AgentSession(
+    #    llm=openai.realtime.RealtimeModel(
+    #        voice="alloy",  # Options: alloy, echo, shimmer
+    #        model="gpt-4o-mini-realtime-preview",
+    #    )
+    #)
 
     # Create bitHuman avatar session using the avatar ID
     logger.info("Creating bitHuman avatar session...")
