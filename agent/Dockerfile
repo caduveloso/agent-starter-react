@@ -12,15 +12,15 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements from agent directory
-COPY agent/requirements.txt .
+# Copy requirements file
+COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy agent code from agent directory
-COPY agent/agent.py .
+# Copy all agent Python files (will be mounted as volume in docker-compose)
+COPY *.py .
 
 # Run the agent
 CMD ["python", "agent.py", "dev"]

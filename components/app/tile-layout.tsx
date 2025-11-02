@@ -8,6 +8,7 @@ import {
   useLocalParticipant,
   useTracks,
   useVoiceAssistant,
+  useRemoteParticipants,
 } from '@livekit/components-react';
 import { cn } from '@/lib/utils';
 
@@ -82,12 +83,32 @@ export function TileLayout({ chatOpen }: TileLayoutProps) {
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
+  // Get all remote participants (includes both agents)
+  const remoteParticipants = useRemoteParticipants();
+
+  // Find all avatar video tracks (BitHuman agents)
+  const avatarTracks = useMemo(() => {
+    const tracks: TrackReference[] = [];
+    remoteParticipants.forEach(participant => {
+      const videoPublication = participant.getTrackPublication(Track.Source.Camera);
+      if (videoPublication && videoPublication.track) {
+        tracks.push({
+          participant,
+          publication: videoPublication,
+          source: Track.Source.Camera,
+        });
+      }
+    });
+    return tracks;
+  }, [remoteParticipants]);
+
   const isCameraEnabled = cameraTrack && !cameraTrack.publication.isMuted;
   const isScreenShareEnabled = screenShareTrack && !screenShareTrack.publication.isMuted;
   const hasSecondTile = isCameraEnabled || isScreenShareEnabled;
+  const hasMultipleAvatars = avatarTracks.length > 1;
 
   const animationDelay = chatOpen ? 0 : 0.15;
-  const isAvatar = agentVideoTrack !== undefined;
+  const isAvatar = agentVideoTrack !== undefined || avatarTracks.length > 0;
   const videoWidth = agentVideoTrack?.publication.dimensions?.width ?? 0;
   const videoHeight = agentVideoTrack?.publication.dimensions?.height ?? 0;
 
@@ -145,8 +166,8 @@ export function TileLayout({ chatOpen }: TileLayoutProps) {
                 </MotionContainer>
               )}
 
-              {isAvatar && (
-                // Avatar Agent
+              {isAvatar && !hasMultipleAvatars && (
+                // Single Avatar Agent
                 <MotionContainer
                   key="avatar"
                   layoutId="avatar"
@@ -181,10 +202,75 @@ export function TileLayout({ chatOpen }: TileLayoutProps) {
                   <VideoTrack
                     width={videoWidth}
                     height={videoHeight}
-                    trackRef={agentVideoTrack}
+                    trackRef={agentVideoTrack || avatarTracks[0]}
                     className={cn(chatOpen && 'size-[90px] object-cover')}
                   />
                 </MotionContainer>
+              )}
+
+              {hasMultipleAvatars && (
+                // Multiple Avatar Agents - Show Both Side by Side
+                <div className={cn('flex gap-4', chatOpen ? 'flex-row' : 'flex-row justify-center items-center w-full')}>
+                  {avatarTracks.map((track, index) => {
+                    const agentName = index === 0 ? 'Analyst' : 'Creative';
+                    const agentColor = index === 0 ? 'bg-blue-500/80' : 'bg-purple-500/80';
+
+                    return (
+                      <MotionContainer
+                        key={`avatar-${track.participant.identity}`}
+                        layoutId={`avatar-${index}`}
+                        initial={{
+                          scale: 1,
+                          opacity: 1,
+                          maskImage:
+                            'radial-gradient(circle, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 20px, transparent 20px)',
+                          filter: 'blur(20px)',
+                        }}
+                        animate={{
+                          maskImage:
+                            'radial-gradient(circle, rgba(0, 0, 0, 1) 0, rgba(0, 0, 0, 1) 500px, transparent 500px)',
+                          filter: 'blur(0px)',
+                          borderRadius: chatOpen ? 6 : 12,
+                        }}
+                        transition={{
+                          ...ANIMATION_TRANSITION,
+                          delay: animationDelay + (index * 0.1),
+                          maskImage: {
+                            duration: 1,
+                          },
+                          filter: {
+                            duration: 1,
+                          },
+                        }}
+                        className={cn(
+                          'overflow-hidden bg-black drop-shadow-xl/80 relative border-2 border-transparent transition-all',
+                          chatOpen ? 'h-[90px] w-[90px]' : 'h-auto flex-1 max-w-[400px]'
+                        )}
+                      >
+                        <VideoTrack
+                          width={track.publication.dimensions?.width ?? 0}
+                          height={track.publication.dimensions?.height ?? 0}
+                          trackRef={track}
+                          className={cn(chatOpen ? 'size-[90px] object-cover' : 'w-full h-auto object-cover')}
+                        />
+                        {/* Agent Label with Role */}
+                        <div className={cn('absolute bottom-2 left-2 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-white font-semibold shadow-lg', agentColor)}>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            <span>Agent {index + 1}</span>
+                            <span className="opacity-75">• {agentName}</span>
+                          </div>
+                        </div>
+                        {/* Top badge */}
+                        {!chatOpen && (
+                          <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-white/70 font-medium">
+                            {index === 0 ? '🔍 Analytical' : '💡 Creative'}
+                          </div>
+                        )}
+                      </MotionContainer>
+                    );
+                  })}
+                </div>
               )}
             </AnimatePresence>
           </div>

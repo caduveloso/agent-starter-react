@@ -1,11 +1,22 @@
 services:
   bithuman-agent:
     build:
-      context: ..
-      dockerfile: agent/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     env_file:
       - ../.env
     volumes:
-      - ./agent.py:/app/agent.py
+      - .:/app
     network_mode: "host"
     restart: unless-stopped
+    # Change the command to run different agent versions:
+    # Default: Single agent
+    # command: ["python", "agent.py", "dev"]
+    # Multi-agent basic:
+    # command: ["python", "multi_agent.py", "dev"]
+    # Multi-agent advanced (shared avatar, complex):
+    # command: ["python", "multi_agent_advanced.py", "dev"]
+    # Multi-agent simple (best turn-taking):
+    # command: ["python", "multi_agent_simple.py", "dev"]
+    # Multi-agent with dual avatars + custom identities (TESTING):
+    command: ["python", "multi_agent_dual_avatars.py", "dev"]

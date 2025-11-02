@@ -4,7 +4,9 @@
       "Bash(powershell:*)",
       "Bash(docker logs:*)",
       "Bash(pnpm dev:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(docker compose:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

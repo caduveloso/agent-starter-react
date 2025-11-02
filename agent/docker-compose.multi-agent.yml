@@ -1,0 +1,44 @@
+services:
+  # Original single agent (keep for reference)
+  bithuman-agent:
+    build:
+      context: ..
+      dockerfile: agent/Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - ./agent.py:/app/agent.py
+    network_mode: "host"
+    restart: unless-stopped
+    profiles:
+      - single-agent
+
+  # Basic multi-agent system
+  multi-agent-basic:
+    build:
+      context: ..
+      dockerfile: agent/Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - ./multi_agent.py:/app/multi_agent.py
+    command: ["python", "multi_agent.py", "dev"]
+    network_mode: "host"
+    restart: unless-stopped
+    profiles:
+      - multi-basic
+
+  # Advanced multi-agent system (recommended)
+  multi-agent-advanced:
+    build:
+      context: ..
+      dockerfile: agent/Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - ./multi_agent_advanced.py:/app/multi_agent_advanced.py
+    command: ["python", "multi_agent_advanced.py", "dev"]
+    network_mode: "host"
+    restart: unless-stopped
+    profiles:
+      - multi-advanced
