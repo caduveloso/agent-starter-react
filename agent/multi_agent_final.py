@@ -1,10 +1,12 @@
 import asyncio
 import logging
 import os
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
+from livekit import rtc
 from livekit.agents import (
     AutoSubscribe,
     JobContext,
@@ -36,6 +38,39 @@ class ConversationState:
     agent1_last_response: str = ""
     agent2_last_response: str = ""
     consensus_reached: bool = False
+    current_speaker: str = "agent1"  # Track who should speak
+
+
+class TurnCoordinator:
+    """Coordinates turns between agents using data messages"""
+
+    def __init__(self, room: rtc.Room):
+        self.room = room
+        self.current_speaker = "agent1"
+        self.agent1_can_speak = True
+        self.agent2_can_speak = False
+
+    async def switch_to_agent2(self):
+        """Signal that Agent 2 should speak now"""
+        self.current_speaker = "agent2"
+        self.agent1_can_speak = False
+        self.agent2_can_speak = True
+        await self.room.local_participant.publish_data(
+            json.dumps({"type": "turn_switch", "speaker": "agent2"}).encode(),
+            topic="turn_coordination"
+        )
+        logger.info("🔄 Turn switched to Agent 2")
+
+    async def switch_to_agent1(self):
+        """Signal that Agent 1 should speak now"""
+        self.current_speaker = "agent1"
+        self.agent1_can_speak = True
+        self.agent2_can_speak = False
+        await self.room.local_participant.publish_data(
+            json.dumps({"type": "turn_switch", "speaker": "agent1"}).encode(),
+            topic="turn_coordination"
+        )
+        logger.info("🔄 Turn switched to Agent 1")
 
 
 def prewarm(proc: JobContext):
@@ -172,7 +207,7 @@ IMPORTANT: After you speak, you MUST hand off to Agent 2 so they can respond. Do
     analyst_agent = AnalystAgent(avatar_session=avatar1)
     creative_agent = CreativeAgent(avatar_session=avatar2)
 
-    # Create single session that will be shared between agents during handoffs
+    # Create single session that both agents will share
     logger.info("Creating shared agent session...")
     session = AgentSession(
         vad=silero.VAD.load(),
@@ -181,18 +216,32 @@ IMPORTANT: After you speak, you MUST hand off to Agent 2 so they can respond. Do
         tts=openai.TTS(model=TTS_MODEL, voice="alloy"),
     )
 
-    # Set the conversation state in session userdata
+    # Set the conversation state
     session.userdata = conversation_state
 
-    # Start both avatars (they'll show as thumbnails)
-    logger.info("Starting Avatar 1 (Analyst)...")
-    await avatar1.start(session, room=ctx.room)
+    # Start both avatars (NOTE: They will both be visible, but we need to control which one is active)
+    logger.info("Starting both avatars...")
 
-    logger.info("Starting Avatar 2 (Creative)...")
-    await avatar2.start(session, room=ctx.room)
+    # Avatar 1 gets its own mini-session just for lip-sync control
+    avatar1_session = AgentSession(
+        vad=None,  # No VAD needed, main session handles it
+        stt=None,  # No STT needed
+        llm=None,  # No LLM needed
+        tts=openai.TTS(model=TTS_MODEL, voice="alloy"),  # Only TTS for lip sync
+    )
+    await avatar1.start(avatar1_session, room=ctx.room)
 
-    # Start session with Agent 1 (Analyst) as the initial agent
-    logger.info("Starting session with Agent 1 (Analyst) as initial agent...")
+    # Avatar 2 gets its own mini-session just for lip-sync control
+    avatar2_session = AgentSession(
+        vad=None,
+        stt=None,
+        llm=None,
+        tts=openai.TTS(model=TTS_MODEL, voice="echo"),
+    )
+    await avatar2.start(avatar2_session, room=ctx.room)
+
+    # Start main session with Agent 1 (Analyst) as the initial agent
+    logger.info("Starting main session with Agent 1 (Analyst) as initial agent...")
     await session.start(agent=analyst_agent, room=ctx.room)
 
     logger.info("=" * 70)

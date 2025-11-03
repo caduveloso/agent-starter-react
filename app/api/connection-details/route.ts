@@ -81,11 +81,13 @@ function createParticipantToken(
   };
   at.addGrant(grant);
 
-  if (agentName) {
-    at.roomConfig = new RoomConfiguration({
-      agents: [{ agentName }],
-    });
-  }
+  // Dispatch BOTH agents to the same room for multi-agent conversation
+  at.roomConfig = new RoomConfiguration({
+    agents: [
+      { agentName: 'analyst' },    // Agent 1 - The Analyst
+      { agentName: 'creative' },   // Agent 2 - The Creative
+    ],
+  });
 
   return at.toJwt();
 }

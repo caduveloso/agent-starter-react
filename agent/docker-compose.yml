@@ -1,5 +1,6 @@
 services:
-  bithuman-agent:
+  # Agent 1 - The Analyst
+  agent1-analyst:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,8 +10,17 @@ services:
       - .:/app
     network_mode: "host"
     restart: unless-stopped
-    # Change the command to run different agent versions:
-    # Default: Single agent
-    # command: ["python", "agent.py", "dev"]
-    # Multi-agent with dual avatars and turn coordination (ACTIVE):
-    command: ["python", "multi_agent_final.py", "dev"]
+    command: ["python", "agent1_analyst.py", "dev"]
+
+  # Agent 2 - The Creative
+  agent2-creative:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ../.env
+    volumes:
+      - .:/app
+    network_mode: "host"
+    restart: unless-stopped
+    command: ["python", "agent2_creative.py", "dev"]
