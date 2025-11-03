@@ -1,12 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell:*)",
-      "Bash(docker logs:*)",
-      "Bash(pnpm dev:*)",
-      "Bash(findstr:*)",
-      "Bash(docker compose:*)",
-      "Bash(python:*)"
+      "Bash(docker exec:*)"
     ],
     "deny": [],
     "ask": []
